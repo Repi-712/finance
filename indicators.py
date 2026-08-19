@@ -106,3 +106,23 @@ def pct_change_spike(closes, threshold=5.0):
         return None
     chg = (closes[-1] - closes[-2]) / closes[-2] * 100
     return chg if abs(chg) >= threshold else None
+
+
+def new_high(highs, lookback=5):
+    """本日の高値が過去(lookback-1)日の高値をすべて上回っていれば、その高値を返す"""
+    if len(highs) < lookback:
+        return None
+    prior = highs[-lookback:-1]
+    if not prior:
+        return None
+    return highs[-1] if highs[-1] > max(prior) else None
+
+
+def new_low(lows, lookback=5):
+    """本日の安値が過去(lookback-1)日の安値をすべて下回っていれば、その安値を返す"""
+    if len(lows) < lookback:
+        return None
+    prior = lows[-lookback:-1]
+    if not prior:
+        return None
+    return lows[-1] if lows[-1] < min(prior) else None

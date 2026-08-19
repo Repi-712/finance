@@ -15,6 +15,7 @@ HTMLレポートを出力する。
   - bb_breakout_up / bb_breakout_down : 終値がボリンジャーバンド(20,2σ)の外側
   - volume_spike : 出来高が直近20日平均の2倍以上
   - price_spike : 前日比騰落率が±5%以上
+  - new_high_5d / new_low_5d : 過去5営業日の高値/安値を更新
 """
 from collections import defaultdict
 from datetime import datetime
@@ -33,6 +34,7 @@ RSI_OVERBOUGHT = 70
 VOLUME_MULTIPLIER = 2.0
 PRICE_SPIKE_PCT = 5.0
 LIQUIDITY_LOOKBACK = 5
+NEW_EXTREME_LOOKBACK = 5
 
 YAHOO_JP_URL = "https://finance.yahoo.co.jp/quote/{code}.T"
 
@@ -94,6 +96,17 @@ def screen_symbol(series, master):
         direction = "急騰" if ps > 0 else "急落"
         signals.append(("price_spike", f"前日比{ps:+.1f}%（{direction}）", ps))
 
+    highs = [b.high for b in bars]
+    lows = [b.low for b in bars]
+    if all(h is not None for h in highs):
+        nh = ind.new_high(highs, lookback=NEW_EXTREME_LOOKBACK)
+        if nh is not None:
+            signals.append(("new_high_5d", f"{NEW_EXTREME_LOOKBACK}日高値更新（高値{nh:,.1f}）", nh))
+    if all(l is not None for l in lows):
+        nl = ind.new_low(lows, lookback=NEW_EXTREME_LOOKBACK)
+        if nl is not None:
+            signals.append(("new_low_5d", f"{NEW_EXTREME_LOOKBACK}日安値更新（安値{nl:,.1f}）", nl))
+
     return [
         {
             "code": series.code,
@@ -120,6 +133,8 @@ SIGNAL_LABELS = {
     "bb_breakout_down": ("BB下抜けブレイク", "#c0392b"),
     "volume_spike": ("出来高急増", "#1f6fb2"),
     "price_spike": ("値動き急変", "#a3691a"),
+    "new_high_5d": ("5日新高値", "#2f8f4e"),
+    "new_low_5d": ("5日新安値", "#c0392b"),
 }
 
 SIGNAL_DESCRIPTIONS = {
@@ -131,6 +146,8 @@ SIGNAL_DESCRIPTIONS = {
     "bb_breakout_down": "終値がボリンジャーバンド(20日,-2σ)の下限を下抜けた銘柄。強い下落モメンタム・ブレイクダウン。",
     "volume_spike": "出来高が直近20日平均の2倍以上に急増した銘柄。ニュースや材料が出て注目度が上がっている可能性。",
     "price_spike": "前日比の値動きが±5%以上あった銘柄。好材料・悪材料による急騰・急落。",
+    "new_high_5d": "本日の高値が過去5営業日で最も高い銘柄（直近4日の高値をすべて上回った）。短期的な上昇の勢いが強い。",
+    "new_low_5d": "本日の安値が過去5営業日で最も安い銘柄（直近4日の安値をすべて下回った）。短期的な下落の勢いが強い。",
 }
 
 
