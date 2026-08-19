@@ -122,6 +122,17 @@ SIGNAL_LABELS = {
     "price_spike": ("値動き急変", "#a3691a"),
 }
 
+SIGNAL_DESCRIPTIONS = {
+    "golden_cross": "短期線(SMA5)が中期線(SMA25)を下から上に突き抜けた銘柄。上昇トレンドへの転換を示唆する強気シグナル。",
+    "dead_cross": "短期線(SMA5)が中期線(SMA25)を上から下に突き抜けた銘柄。下降トレンドへの転換を示唆する弱気シグナル。",
+    "rsi_oversold": "RSI(14日)が30以下まで下落した銘柄。売られすぎで、反発（自律反発）が期待できる可能性がある。",
+    "rsi_overbought": "RSI(14日)が70以上まで上昇した銘柄。買われすぎで、目先の反落・利益確定売りに注意。",
+    "bb_breakout_up": "終値がボリンジャーバンド(20日,+2σ)の上限を上抜けた銘柄。強い上昇モメンタム・ブレイクアウト。",
+    "bb_breakout_down": "終値がボリンジャーバンド(20日,-2σ)の下限を下抜けた銘柄。強い下落モメンタム・ブレイクダウン。",
+    "volume_spike": "出来高が直近20日平均の2倍以上に急増した銘柄。ニュースや材料が出て注目度が上がっている可能性。",
+    "price_spike": "前日比の値動きが±5%以上あった銘柄。好材料・悪材料による急騰・急落。",
+}
+
 
 def fmt_int(v):
     return "{:,.0f}".format(v) if v is not None else "-"
@@ -148,17 +159,19 @@ def render_html(all_results, n_symbols, latest_date):
         label, color = SIGNAL_LABELS[t]
         rows_sorted = sorted(rows, key=lambda r: r["code"])
         trs = "".join(
-            f"<tr><td><a href=\"{YAHOO_JP_URL.format(code=r['code'])}\" target=\"_blank\" rel=\"noopener\">{r['code']}</a></td>"
+            f"<tr><td data-sort=\"{r['code']}\"><a href=\"{YAHOO_JP_URL.format(code=r['code'])}\" target=\"_blank\" rel=\"noopener\">{r['code']}</a></td>"
             f"<td>{r['name']}</td><td>{r['sector']}</td>"
-            f"<td class='num'>{r['close']:,.1f}</td>"
-            f"<td class='num'>{fmt_int(r['avg_volume_5d'])}</td>"
-            f"<td class='num'>{fmt_oku(r['avg_turnover_5d'])}</td>"
+            f"<td class='num' data-sort=\"{r['close']}\">{r['close']:,.1f}</td>"
+            f"<td class='num' data-sort=\"{r['avg_volume_5d'] if r['avg_volume_5d'] is not None else -1}\">{fmt_int(r['avg_volume_5d'])}</td>"
+            f"<td class='num' data-sort=\"{r['avg_turnover_5d'] if r['avg_turnover_5d'] is not None else -1}\">{fmt_oku(r['avg_turnover_5d'])}</td>"
             f"<td>{r['detail']}</td></tr>"
             for r in rows_sorted
         )
+        desc = SIGNAL_DESCRIPTIONS.get(t, "")
         sections.append(f"""
 <h2 style="border-left-color:{color}">{label}（{len(rows)}銘柄）</h2>
-<table>
+<p class="note">{desc}</p>
+<table class="sortable">
   <tr><th>コード</th><th>銘柄名</th><th>セクター</th><th>終値</th><th>5日平均出来高</th><th>5日平均売買代金</th><th>詳細</th></tr>
   {trs if trs else "<tr><td colspan='7'>該当なし</td></tr>"}
 </table>
@@ -182,6 +195,11 @@ def render_html(all_results, n_symbols, latest_date):
   th {{ background: #f0f0f0; text-align: left; }}
   td.num {{ text-align: right; }}
   .note {{ font-size: 12px; color: #888; margin-top: 4px; }}
+  table.sortable th {{ cursor: pointer; user-select: none; white-space: nowrap; }}
+  table.sortable th:hover {{ background: #e4e4e4; }}
+  table.sortable th::after {{ content: ""; display: inline-block; width: 10px; margin-left: 2px; opacity: 0.4; }}
+  table.sortable th.sort-asc::after {{ content: "▲"; opacity: 1; }}
+  table.sortable th.sort-desc::after {{ content: "▼"; opacity: 1; }}
 </style>
 </head>
 <body>
@@ -192,6 +210,37 @@ def render_html(all_results, n_symbols, latest_date):
 <div class="cards">{cards if cards else "<p>該当銘柄なし</p>"}</div>
 
 {"".join(sections)}
+
+<script>
+document.querySelectorAll("table.sortable").forEach(function(table) {{
+  var headerRow = table.rows[0];
+  Array.prototype.forEach.call(headerRow.cells, function(th, colIndex) {{
+    th.addEventListener("click", function() {{
+      var tbody = table.tBodies[0];
+      var rows = Array.prototype.slice.call(table.rows, 1);
+      var asc = !th.classList.contains("sort-asc");
+      Array.prototype.forEach.call(headerRow.cells, function(h) {{
+        h.classList.remove("sort-asc", "sort-desc");
+      }});
+      th.classList.add(asc ? "sort-asc" : "sort-desc");
+
+      rows.sort(function(r1, r2) {{
+        var c1 = r1.cells[colIndex], c2 = r2.cells[colIndex];
+        var v1 = c1.getAttribute("data-sort");
+        var v2 = c2.getAttribute("data-sort");
+        var cmp;
+        if (v1 !== null && v2 !== null) {{
+          cmp = parseFloat(v1) - parseFloat(v2);
+        }} else {{
+          cmp = c1.textContent.localeCompare(c2.textContent, "ja");
+        }}
+        return asc ? cmp : -cmp;
+      }});
+      rows.forEach(function(row) {{ tbody.appendChild(row); }});
+    }});
+  }});
+}});
+</script>
 </body>
 </html>
 """
