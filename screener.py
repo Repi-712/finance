@@ -168,7 +168,7 @@ def render_html(all_results, n_symbols, latest_date):
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<title>スクリーニングレポート</title>
+<title>東証プライム スクリーニング</title>
 <style>
   body {{ font-family: "Segoe UI", "Yu Gothic", sans-serif; margin: 24px; color: #222; background: #fafafa; }}
   h1 {{ font-size: 20px; }}
