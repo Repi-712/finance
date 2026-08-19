@@ -211,6 +211,8 @@ def render_html(all_results, n_symbols, latest_date):
   th, td {{ border: 1px solid #e0e0e0; padding: 6px 10px; font-size: 13px; }}
   th {{ background: #f0f0f0; text-align: left; }}
   td.num {{ text-align: right; }}
+  table tr:nth-child(even) {{ background: #f4f6f5; }}
+  table tr:hover td {{ background: #eef3ff; }}
   .note {{ font-size: 12px; color: #888; margin-top: 4px; }}
   table.sortable th {{ cursor: pointer; user-select: none; white-space: nowrap; }}
   table.sortable th:hover {{ background: #e4e4e4; }}
