@@ -167,8 +167,8 @@ def render_html(all_results, n_symbols, latest_date):
         by_type[r["signal_type"]].append(r)
 
     cards = "".join(
-        f'<div class="card"><div class="label">{SIGNAL_LABELS[t][0]}</div>'
-        f'<div class="value" style="color:{SIGNAL_LABELS[t][1]}">{len(rows)}銘柄</div></div>'
+        f'<a class="card" href="#sig-{t}"><div class="label">{SIGNAL_LABELS[t][0]}</div>'
+        f'<div class="value" style="color:{SIGNAL_LABELS[t][1]}">{len(rows)}銘柄</div></a>'
         for t, rows in sorted(by_type.items(), key=lambda kv: -len(kv[1]))
     )
 
@@ -187,7 +187,7 @@ def render_html(all_results, n_symbols, latest_date):
         )
         desc = SIGNAL_DESCRIPTIONS.get(t, "")
         sections.append(f"""
-<h2 style="border-left-color:{color}">{label}（{len(rows)}銘柄）</h2>
+<h2 id="sig-{t}" style="border-left-color:{color}">{label}（{len(rows)}銘柄）</h2>
 <p class="note">{desc}</p>
 <table class="sortable">
   <tr><th>コード</th><th>銘柄名</th><th>セクター</th><th>終値</th><th>5日平均出来高</th><th>5日平均売買代金</th><th>詳細</th></tr>
@@ -205,9 +205,11 @@ def render_html(all_results, n_symbols, latest_date):
   h1 {{ font-size: 20px; }}
   h2 {{ font-size: 16px; margin-top: 32px; border-left: 4px solid #2f8f4e; padding-left: 8px; }}
   .cards {{ display: flex; flex-wrap: wrap; gap: 12px; margin: 16px 0; }}
-  .card {{ background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 12px 16px; min-width: 150px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }}
+  .card {{ display: block; background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 12px 16px; min-width: 150px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); text-decoration: none; color: inherit; cursor: pointer; transition: box-shadow 0.15s, transform 0.15s; }}
+  .card:hover {{ box-shadow: 0 3px 8px rgba(0,0,0,0.12); transform: translateY(-1px); }}
   .card .label {{ font-size: 12px; color: #777; }}
   .card .value {{ font-size: 20px; font-weight: 600; margin-top: 4px; }}
+  h2[id] {{ scroll-margin-top: 12px; }}
   table {{ border-collapse: collapse; width: 100%; background: #fff; margin-top: 8px; }}
   th, td {{ border: 1px solid #e0e0e0; padding: 6px 10px; font-size: 13px; }}
   th {{ background: #f0f0f0; text-align: left; }}
