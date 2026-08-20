@@ -23,6 +23,7 @@ from pathlib import Path
 
 import indicators as ind
 import jpx_master
+import jquants_client
 from price_data_loader import load_price_data
 
 HERE = Path(__file__).parent
@@ -278,9 +279,12 @@ def main():
         return
 
     try:
-        master = jpx_master.get_master_dict()
+        if jquants_client.has_credentials():
+            master = jquants_client.get_master_dict()
+        else:
+            master = jpx_master.get_master_dict()
     except Exception as e:
-        print("JPX銘柄マスタの取得に失敗しました（銘柄名・セクターなしで続行）:", e)
+        print("銘柄マスタの取得に失敗しました（銘柄名・セクターなしで続行）:", e)
         master = {}
 
     all_results = []

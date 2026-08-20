@@ -1,5 +1,7 @@
 price_data/
 jpx_master_cache.xls
+jquants_credentials.json
+jquants_listed_cache.json
 screening_report.html
 __pycache__/
 *.pyc
